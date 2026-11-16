@@ -53,6 +53,10 @@ class LongProcessingController(private val scope: CoroutineScope) {
                 if (generation == token) mutableState.value = state.value.copy(running = false, result = result)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: LongMaterialException) {
+                val presentation = e.reason.presentation()
+                if (generation == token) mutableState.value = state.value.copy(
+                    running = false, error = presentation.message, canRetry = presentation.canRetry)
             } catch (e: Exception) {
                 if (generation == token) mutableState.value = state.value.copy(
                     running = false, error = "Не удалось получить результат. Попробуйте снова.", canRetry = true)
