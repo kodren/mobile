@@ -26,6 +26,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import android.app.Application
 import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.lifecycle.ViewModelProvider
@@ -150,4 +152,15 @@ fun StudyApp(flow: StudyFlow, serverAddress: String? = null, onSaveServer: (Stri
             }
         }
     }
+}
+fun shareResult(context: Context, modeName: String, text: String) {
+    val sendIntent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_SUBJECT, modeName)
+        putExtra(Intent.EXTRA_TEXT, text)
+        type = "text/plain"
+    }
+
+    val shareIntent = Intent.createChooser(sendIntent, "Поделиться результатом")
+    context.startActivity(shareIntent)
 }
