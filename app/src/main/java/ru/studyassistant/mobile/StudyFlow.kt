@@ -13,11 +13,11 @@ import ru.studyassistant.mobile.api.validateMaterial
 enum class Screen { MATERIAL, MODES, RESULT }
 
 enum class ProcessingMode(val title: String, val description: String) {
-    SHORT_SUMMARY("Краткий конспект", "Главные мысли материала в нескольких предложениях."),
-    DETAILED_SUMMARY("Подробный конспект", "Развёрнутый конспект с основными подробностями."),
-    SIMPLE_EXPLANATION("Объяснение простыми словами", "Понятное объяснение сложных идей."),
-    KEY_TERMS("Ключевые термины", "Основные понятия и их определения."),
-    SELF_CHECK_QUESTIONS("Вопросы для самопроверки", "Вопросы для проверки понимания материала.");
+    SHORT_SUMMARY("Краткий конспект", "Главное из материала в нескольких тезисах"),
+    DETAILED_SUMMARY("Подробный конспект", "Полный разбор темы со всеми деталями"),
+    SIMPLE_EXPLANATION("Объяснение простым языком", "Сложные места пересказаны понятными словами"),
+    KEY_TERMS("Ключевые термины", "Главные понятия с краткими определениями"),
+    SELF_CHECK_QUESTIONS("Вопросы для самопроверки", "Вопросы по материалу, чтобы проверить себя");
 
     companion object {
         fun fromId(id: String): ProcessingMode? = entries.find { it.name == id }
@@ -40,7 +40,7 @@ data class StudyState(
     val resultMode: ProcessingMode = ProcessingMode.SHORT_SUMMARY,
     val error: String? = null,
     val notice: String? = null,
-    val canRetry: Boolean = false
+    val longProgress: LongProgress? = null, val longError: Boolean = false, val canRetry: Boolean = false
 )
 
 /** Все методы вызываются на UI-потоке; зависимости запросов подменяются в тестах. */
@@ -49,7 +49,7 @@ class StudyFlow(
     private val process: suspend (String, ProcessingMode) -> String,
     private val health: suspend () -> String,
     private val loadModes: (suspend () -> List<ProcessingMode>)? = null,
-    private val uploadTxt: (suspend (String, ByteArray, ProcessingMode) -> String)? = null
+    private val uploadTxt: (suspend (String, ByteArray, ProcessingMode) -> String)? = null, private val processMaterial: (suspend (String, String?, ByteArray?, ProcessingMode, (LongProgress) -> Unit) -> String)? = null
 ) {
     private val mutableState = MutableStateFlow(initialState())
     val state: StateFlow<StudyState> = mutableState.asStateFlow()
@@ -96,7 +96,7 @@ class StudyFlow(
 
     fun editMaterial(text: String) {
         if (!state.value.busy) mutableState.value = state.value.copy(
-            material = text, fileName = null, fileBytes = null, result = "", error = null, notice = null, canRetry = false
+            material = text, fileName = null, fileBytes = null, result = "", error = null, notice = null, canRetry = false, longProgress = null, longError = false
         )
     }
     fun serverChanged() {
@@ -125,7 +125,7 @@ class StudyFlow(
     fun readFile(read: suspend () -> MaterialFile) {
         if (state.value.busy) return
         val requestGeneration = ++generation
-        mutableState.value = state.value.copy(busy = true, loadingFile = true, error = null, notice = null, canRetry = false)
+        mutableState.value = state.value.copy(busy = true, loadingFile = true, error = null, notice = null, canRetry = false, longProgress = null, longError = false)
         job = scope.launch {
             try {
                 val file = read()
@@ -194,7 +194,7 @@ class StudyFlow(
 
     fun selectMode(mode: ProcessingMode) {
         if (!state.value.busy && mode in state.value.modes) {
-            mutableState.value = state.value.copy(mode = mode, error = null, notice = null, canRetry = false)
+            mutableState.value = state.value.copy(mode = mode, error = null, notice = null, canRetry = false, longProgress = null, longError = false)
         }
     }
 
@@ -245,11 +245,14 @@ class StudyFlow(
         }
         val requestGeneration = ++generation
         lastRequest = request
-        mutableState.value = submitted.copy(busy = true, error = null, notice = null, canRetry = false)
+        mutableState.value = submitted.copy(busy = true, error = null, notice = null, canRetry = false, longProgress = null, longError = false)
         job = scope.launch {
             try {
                 val response = when {
                     healthOnly -> health()
+                    processMaterial != null -> processMaterial.invoke(request.text, request.fileName, request.fileBytes, request.mode) { progress ->
+                        if (generation == requestGeneration) mutableState.value = state.value.copy(longProgress = progress)
+                    }
                     request.fileName != null && request.fileBytes != null -> {
                         val upload = uploadTxt ?: error("uploadTxt не настроен")
                         upload(request.fileName, request.fileBytes, request.mode)
@@ -264,6 +267,8 @@ class StudyFlow(
                 )
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: LongMaterialException) {
+                if (generation == requestGeneration) mutableState.value = state.value.copy(error = e.reason.presentation().message, canRetry = e.reason.presentation().canRetry, longError = true)
             } catch (e: ApiException) {
                 if (generation == requestGeneration) {
                     mutableState.value = state.value.copy(
@@ -281,7 +286,7 @@ class StudyFlow(
         generation++
         job?.cancel()
         mutableState.value = state.value.copy(
-            busy = false, loadingModes = false, loadingFile = false, error = null, canRetry = false,
+            busy = false, loadingModes = false, loadingFile = false, error = null, canRetry = false, longProgress = null, longError = false,
             notice = if (state.value.loadingFile) "Выбор файла отменён." else "Ожидание отменено. Сервер может продолжать обработку."
         )
     }
@@ -294,7 +299,7 @@ class StudyFlow(
         if (state.value.busy) { cancel(); return }
         mutableState.value = state.value.copy(
             screen = if (state.value.screen == Screen.RESULT) Screen.MODES else Screen.MATERIAL,
-            error = null, notice = null, canRetry = false
+            error = null, notice = null, canRetry = false, longProgress = null, longError = false
         )
     }
 }

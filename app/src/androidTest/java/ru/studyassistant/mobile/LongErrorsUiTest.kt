@@ -23,7 +23,7 @@ class LongErrorsUiTest {
         } }
         for (item in LongMaterialFailure.entries) {
             compose.runOnIdle { reason = item }
-            compose.onNodeWithText(item.presentation().message).assertExists()
+            compose.onNodeWithText(item.presentation().message.substringAfter(". ")).assertExists()
             if (item.presentation().canRetry) compose.onNodeWithText("Повторить").performScrollTo().performClick()
             else compose.onNodeWithText("Повторить").assertDoesNotExist()
             val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()

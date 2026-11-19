@@ -32,8 +32,8 @@ class MaterialModesUiTest {
         start()
         capture("material-empty")
         compose.onNodeWithText("Выбрать режим").performScrollTo().assertIsNotEnabled()
-        compose.runOnIdle { flow.editMaterial("a".repeat(10001)) }
-        compose.onNodeWithText("Допустимо не более 10 000 символов.").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { flow.editMaterial("a".repeat(24001)) }
+        compose.onNodeWithText("Допустимо не более 24 000 символов.").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Выбрать режим").assertIsNotEnabled()
         capture("material-error")
         compose.runOnIdle { flow.selectFile("Лекция.txt", byteArrayOf(1)) }
@@ -55,6 +55,7 @@ class MaterialModesUiTest {
         }
         capture("modes-bottom")
         compose.onNodeWithText("Создать").performScrollTo().assertIsDisplayed().assertIsEnabled()
+        capture("create-button-visible")
         compose.onNodeWithText("Назад").performScrollTo().performClick()
         compose.onNodeWithText("Учебный текст").assertTextContains("Учебный материал")
     }
