@@ -54,7 +54,8 @@ class StudyViewModel(application: Application) : AndroidViewModel(application) {
         process = { text, mode -> withContext(Dispatchers.IO) { api.process(text, mode.name) } },
         health = { withContext(Dispatchers.IO) { api.health() } },
         loadModes = { withContext(Dispatchers.IO) { api.modes() } },
-        uploadTxt = { name, bytes, mode -> withContext(Dispatchers.IO) { api.uploadTxt(name, bytes, mode.name) } }
+        uploadTxt = { name, bytes, mode -> withContext(Dispatchers.IO) { api.uploadTxt(name, bytes, mode.name) } },
+        processMaterial = { text, name, bytes, mode, report -> ru.studyassistant.mobile.api.BackgroundProcessor(api).process(text, name, bytes, mode, report) }
     )
     fun importFile(uri: Uri) = flow.readFile {
         withContext(Dispatchers.IO) { readMaterialFile(getApplication<Application>().contentResolver, uri) }
@@ -100,7 +101,7 @@ fun StudyApp(flow: StudyFlow, serverAddress: String? = null, onSaveServer: (Stri
     Scaffold(modifier = Modifier.fillMaxSize()) { insets ->
         Column(
             Modifier.padding(insets).imePadding().padding(StudySpacing.screen)
-                .fillMaxSize().then(if (state.screen == Screen.RESULT) Modifier else Modifier.verticalScroll(rememberScrollState())),
+                .fillMaxSize().then(if (state.screen == Screen.RESULT || state.longProgress != null || state.longError) Modifier else Modifier.verticalScroll(rememberScrollState())),
             verticalArrangement = Arrangement.spacedBy(StudySpacing.gap)
         ) {
             if (state.screen != Screen.MATERIAL) Text(when (state.screen) {
@@ -108,6 +109,9 @@ fun StudyApp(flow: StudyFlow, serverAddress: String? = null, onSaveServer: (Stri
                 Screen.MODES -> "Выбор режима"
                 Screen.RESULT -> "Результат"
             }, style = MaterialTheme.typography.headlineSmall)
+            if (state.screen != Screen.RESULT && (state.longProgress != null || state.longError)) {
+                LongProgressContent(LongProcessingState(running = state.busy, progress = state.longProgress ?: LongProgress(), error = state.error, canRetry = state.canRetry), flow::back, flow::retry, Modifier.weight(1f), materialName = state.fileName ?: "Введённый текст")
+            } else {
             when (state.screen) {
                 Screen.MATERIAL -> {
                     MaterialContent(state, flow::editMaterial,
@@ -144,8 +148,9 @@ fun StudyApp(flow: StudyFlow, serverAddress: String? = null, onSaveServer: (Stri
                     StudyButton(onClick = { request(false, retry = true) }, modifier = Modifier.fillMaxWidth()) { Text("Повторить") }
                 }
             }
+            }
             state.notice?.let { Text(it, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
-            if (state.screen == Screen.MODES && !state.busy) {
+            if (state.screen == Screen.MODES && !state.busy && state.longProgress == null && !state.longError) {
                 OutlinedButton(onClick = flow::back, modifier = Modifier.fillMaxWidth()) { Text("Назад") }
             }
         }

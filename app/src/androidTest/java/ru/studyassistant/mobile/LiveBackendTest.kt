@@ -61,7 +61,7 @@ class LiveBackendTest {
         } else {
             // Этот режим запускается только для сервера с заведомо пустым ключом.
             assertEquals(Screen.MODES, state.screen)
-            assertEquals("Сервис обработки текста временно недоступен. Попробуйте позже.", state.error)
+            assertEquals("Сервер недоступен. Не удалось получить результат. Попробуйте ещё раз или зайдите позже", state.error)
             capture("llm-unconfigured", state.error!!)
             compose.onNodeWithText("Повторить").assertExists()
         }

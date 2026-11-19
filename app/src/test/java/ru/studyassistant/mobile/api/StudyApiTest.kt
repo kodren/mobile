@@ -16,7 +16,7 @@ class StudyApiTest {
     @Test fun validatesBlankAndUnicodeLength() {
         assertNotNull(validateMaterial(" \n\t"))
         assertNull(validateMaterial("😀".repeat(10_000)))
-        assertNotNull(validateMaterial("😀".repeat(10_001)))
+        assertNotNull(validateMaterial("😀".repeat(24_001)))
     }
 
     @Test fun healthChecksActualStatus() = withServer(200, "{\"status\":\"ok\"}") { api ->

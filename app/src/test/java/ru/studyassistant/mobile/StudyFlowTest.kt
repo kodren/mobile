@@ -21,7 +21,7 @@ class StudyFlowTest {
         assertEquals(Screen.MATERIAL, flow.state.value.screen)
         assertNotNull(flow.state.value.error)
         assertEquals(0, calls)
-        flow.editMaterial("😀".repeat(10_001))
+        flow.editMaterial("😀".repeat(24_001))
         flow.showModes()
         assertEquals(Screen.MATERIAL, flow.state.value.screen)
         assertNotNull(flow.state.value.error)

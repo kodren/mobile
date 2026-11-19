@@ -48,7 +48,7 @@ fun MaterialContent(state: StudyState, onText: (String) -> Unit, onPickFile: () 
     OutlinedTextField(value = state.material, onValueChange = onText,
         modifier = Modifier.fillMaxWidth().heightIn(min = StudySpacing.inputHeight),
         label = { Text("Учебный текст") }, placeholder = { Text("Введите текст материала…") },
-        supportingText = { Text("$length / 10 000 символов") },
+        supportingText = { Text("$length / 24 000 символов") },
         enabled = !state.busy && state.fileName == null, isError = validation != null,
         shape = MaterialTheme.shapes.large, colors = studyTextFieldColors(), minLines = 6, maxLines = 10)
     if (state.fileName != null) Text("Чтобы ввести текст, уберите выбранный файл.",
