@@ -65,7 +65,7 @@ class StudyApiTest {
         val messages = mapOf(
             400 to "Сервер отклонил запрос. Проверьте текст и выбранный режим.",
             413 to "Материал слишком большой для сервера. Сократите текст или выберите файл меньшего размера.",
-            502 to "Сервис обработки текста временно недоступен. Попробуйте позже.",
+            502 to "Сервер недоступен. Не удалось получить результат. Попробуйте ещё раз или зайдите позже",
             500 to "Ошибка сервера (HTTP 500). Попробуйте позже."
         )
         for ((status, expected) in messages) {
@@ -89,7 +89,7 @@ class StudyApiTest {
     @Test fun reportsUnavailableServer() {
         val port = ServerSocket(0).use { it.localPort }
         val error = assertThrows(ApiException::class.java) { StudyApi("http://127.0.0.1:$port").health() }
-        assertEquals("Не удалось связаться с сервером. Проверьте подключение к сети и попробуйте снова.", error.message)
+        assertEquals("Нет связи. Проверьте интернет и повторите попытку", error.message)
     }
 
     @Test fun processingTimeoutIs90SecondsAndHasItsOwnMessage() {
@@ -109,7 +109,7 @@ class StudyApiTest {
             StudyApi(openConnection = { connection }).health()
         }
         assertEquals(10_000, connection.readTimeout)
-        assertEquals("Не удалось связаться с сервером. Проверьте подключение к сети и попробуйте снова.", error.message)
+        assertEquals("Нет связи. Проверьте интернет и повторите попытку", error.message)
         assertTrue(connection.disconnected)
     }
 

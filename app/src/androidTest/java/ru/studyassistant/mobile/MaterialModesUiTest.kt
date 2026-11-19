@@ -55,6 +55,7 @@ class MaterialModesUiTest {
         }
         capture("modes-bottom")
         compose.onNodeWithText("Создать").performScrollTo().assertIsDisplayed().assertIsEnabled()
+        capture("create-button-visible")
         compose.onNodeWithText("Назад").performScrollTo().performClick()
         compose.onNodeWithText("Учебный текст").assertTextContains("Учебный материал")
     }
