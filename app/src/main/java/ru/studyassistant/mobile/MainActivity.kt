@@ -154,10 +154,18 @@ fun StudyApp(flow: StudyFlow, serverAddress: String? = null, onSaveServer: (Stri
     }
 }
 fun shareResult(context: Context, modeName: String, text: String) {
+    val cleanMode = modeName.trim()
+    val cleanText = text.trim()
+    val shareText = when {
+        cleanMode.isEmpty() -> cleanText
+        cleanText.isEmpty() -> cleanMode
+        else -> "$cleanMode\n\n$cleanText"
+    }
+
     val sendIntent = Intent().apply {
         action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_SUBJECT, modeName)
-        putExtra(Intent.EXTRA_TEXT, text)
+        putExtra(Intent.EXTRA_SUBJECT, cleanMode)
+        putExtra(Intent.EXTRA_TEXT, shareText)
         type = "text/plain"
     }
 
