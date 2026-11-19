@@ -111,7 +111,7 @@ fun StudyApp(flow: StudyFlow, serverAddress: String? = null, onSaveServer: (Stri
             when (state.screen) {
                 Screen.MATERIAL -> {
                     MaterialContent(state, flow::editMaterial,
-                        { filePicker.launch(arrayOf("text/plain")) }, flow::clearFile,
+                        { filePicker.launch(arrayOf("text/plain", "application/pdf")) }, flow::clearFile,
                         { request(false, modes = true) })
                     OutlinedButton(onClick = { request(true) }, enabled = !state.busy,
                         modifier = Modifier.fillMaxWidth()) { Text("Проверить связь с сервером") }

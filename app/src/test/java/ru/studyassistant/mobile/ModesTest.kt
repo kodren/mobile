@@ -9,7 +9,7 @@ class ModesTest {
     @Test fun mapsEveryContractIdToRussianTitleAndDescription() {
         val titles = mapOf("SHORT_SUMMARY" to "Краткий конспект",
             "DETAILED_SUMMARY" to "Подробный конспект",
-            "SIMPLE_EXPLANATION" to "Объяснение простыми словами",
+            "SIMPLE_EXPLANATION" to "Объяснение простым языком",
             "KEY_TERMS" to "Ключевые термины",
             "SELF_CHECK_QUESTIONS" to "Вопросы для самопроверки")
         for ((id, title) in titles) {

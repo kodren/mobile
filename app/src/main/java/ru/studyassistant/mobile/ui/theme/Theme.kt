@@ -23,7 +23,7 @@ private val UiKitColors = lightColorScheme(
     surfaceContainer = PrimarySurface, surfaceContainerLow = Background,
     surfaceContainerHigh = PrimarySurface,
     error = ErrorText, onError = TextOnPrimary,
-    errorContainer = ErrorSurface, onErrorContainer = TextPrimary,
+    errorContainer = ErrorSurface, onErrorContainer = ErrorText,
     outline = TextSecondary, outlineVariant = PrimarySurface,
     surfaceTint = Primary
 )

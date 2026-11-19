@@ -1,6 +1,8 @@
 package ru.studyassistant.mobile
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -17,9 +19,9 @@ import ru.studyassistant.mobile.ui.theme.StudySpacing
 @Composable
 fun LongProgressContent(state: LongProcessingState, onCancel: () -> Unit, onRetry: () -> Unit,
                         modifier: Modifier = Modifier, materialName: String = "Введённый текст") {
-    Column(modifier.verticalScroll(rememberScrollState()).padding(StudySpacing.screen),
+    Column(modifier.background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(StudySpacing.screen),
         verticalArrangement = Arrangement.spacedBy(StudySpacing.gap)) {
-        Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium,
+        Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.large, border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth()) {
             Text(materialName, Modifier.padding(StudySpacing.screen), style = MaterialTheme.typography.bodyMedium)
         }
@@ -47,19 +49,20 @@ fun LongProgressContent(state: LongProcessingState, onCancel: () -> Unit, onRetr
                 Button(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text("Отменить") }
             }
             state.error != null -> {
-                Text("Обработка остановлена", style = MaterialTheme.typography.titleMedium)
-                Surface(color = MaterialTheme.colorScheme.errorContainer, shape = MaterialTheme.shapes.large) {
+                Text("Обработка остановлена", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                Surface(color = MaterialTheme.colorScheme.errorContainer, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, MaterialTheme.colorScheme.onErrorContainer)) {
                     Column(Modifier.padding(StudySpacing.screen),
                         verticalArrangement = Arrangement.spacedBy(StudySpacing.gap)) {
                         Text("!", style = MaterialTheme.typography.headlineLarge,
                             color = MaterialTheme.colorScheme.onErrorContainer)
-                        Text(state.error, color = MaterialTheme.colorScheme.onErrorContainer,
+                        Text(state.error.substringBefore(". "), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                        Text(state.error.substringAfter(". ", ""), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-                        if (state.canRetry) OutlinedButton(onClick = onRetry) { Text("Повторить") }
-                        else OutlinedButton(onClick = onCancel) { Text("Назад") }
+                        if (state.canRetry) OutlinedButton(onClick = onRetry, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, MaterialTheme.colorScheme.onErrorContainer), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onErrorContainer)) { Text("Повторить") }
+                        else OutlinedButton(onClick = onCancel, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary), colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.primary)) { Text("Назад") }
                     }
                 }
-                if (state.canRetry) OutlinedButton(onClick = onCancel) { Text("Назад") }
+                if (state.canRetry) OutlinedButton(onClick = onCancel, shape = MaterialTheme.shapes.large, border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary), colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.primary)) { Text("Назад") }
             }
             state.cancelled -> Text("Ожидание отменено. Сервер может продолжать обработку.")
             state.result != null -> Text("Результат готов")

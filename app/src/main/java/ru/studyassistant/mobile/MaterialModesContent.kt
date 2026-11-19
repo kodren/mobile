@@ -29,12 +29,12 @@ fun MaterialContent(state: StudyState, onText: (String) -> Unit, onPickFile: () 
             }, style = MaterialTheme.typography.titleMedium)
             if (state.loadingFile) {
                 LinearProgressIndicator(Modifier.fillMaxWidth())
-                Text("Читаем файл. Пожалуйста, подождите.")
+                Text("Читаем файл. Пожалуйста, подождите")
             } else if (state.fileName != null) {
                 Text(state.fileName, modifier = Modifier.testTag("selected-file"))
-                TextButton(onClick = onRemoveFile, enabled = !state.busy) { Text("Убрать файл") }
+                TextButton(onClick = onRemoveFile, enabled = !state.busy, contentPadding = PaddingValues(), colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Text("Убрать файл") }
             } else {
-                Text("Введите текст или загрузите файл (только .txt).",
+                Text("Введите текст или загрузите файл (только .txt и .pdf).",
                     style = MaterialTheme.typography.bodySmall)
             }
             OutlinedButton(onClick = onPickFile, enabled = !state.busy,

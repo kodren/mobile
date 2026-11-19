@@ -28,9 +28,9 @@ internal fun readMaterialFile(resolver: ContentResolver, uri: Uri): MaterialFile
     val name = resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
         val column = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
         if (column >= 0 && cursor.moveToFirst()) cursor.getString(column) else null
-    } ?: throw ApiException("Не удалось определить имя файла. Выберите другой TXT-файл.")
-    if (!name.endsWith(".txt", ignoreCase = true) || name.any { it == '"' || it == '\r' || it == '\n' }) {
-        throw ApiException("Выберите файл в формате TXT.")
+    } ?: throw ApiException("Не удалось определить имя файла. Выберите другой TXT или PDF-файл.")
+    if (!(name.endsWith(".txt", ignoreCase = true) || name.endsWith(".pdf", ignoreCase = true)) || name.any { it == '"' || it == '\r' || it == '\n' }) {
+        throw ApiException("Выберите файл в формате TXT или PDF.")
     }
     val bytes = resolver.openInputStream(uri)?.use(::readMaterialBytes)
         ?: throw ApiException("Не удалось открыть файл. Выберите его снова.")

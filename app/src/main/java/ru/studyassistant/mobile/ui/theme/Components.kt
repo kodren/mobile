@@ -41,7 +41,7 @@ fun studyTextFieldColors() = OutlinedTextFieldDefaults.colors(
     disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
     focusedTextColor = MaterialTheme.colorScheme.onSurface,
     unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-    disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+    focusedBorderColor = Primary, unfocusedBorderColor = Inactive, disabledBorderColor = Inactive, disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant
 )
 
 @Composable

@@ -13,11 +13,11 @@ import ru.studyassistant.mobile.api.validateMaterial
 enum class Screen { MATERIAL, MODES, RESULT }
 
 enum class ProcessingMode(val title: String, val description: String) {
-    SHORT_SUMMARY("Краткий конспект", "Главные мысли материала в нескольких предложениях."),
-    DETAILED_SUMMARY("Подробный конспект", "Развёрнутый конспект с основными подробностями."),
-    SIMPLE_EXPLANATION("Объяснение простыми словами", "Понятное объяснение сложных идей."),
-    KEY_TERMS("Ключевые термины", "Основные понятия и их определения."),
-    SELF_CHECK_QUESTIONS("Вопросы для самопроверки", "Вопросы для проверки понимания материала.");
+    SHORT_SUMMARY("Краткий конспект", "Главное из материала в нескольких тезисах"),
+    DETAILED_SUMMARY("Подробный конспект", "Полный разбор темы со всеми деталями"),
+    SIMPLE_EXPLANATION("Объяснение простым языком", "Сложные места пересказаны понятными словами"),
+    KEY_TERMS("Ключевые термины", "Главные понятия с краткими определениями"),
+    SELF_CHECK_QUESTIONS("Вопросы для самопроверки", "Вопросы по материалу, чтобы проверить себя");
 
     companion object {
         fun fromId(id: String): ProcessingMode? = entries.find { it.name == id }
