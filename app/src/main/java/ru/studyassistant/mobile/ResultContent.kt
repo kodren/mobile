@@ -74,9 +74,13 @@ private val SaveErrorFill = Color(0xFFF7C8D4)
 private val SaveErrorBorder = Color(0xFFD95C7E)
 private val SaveErrorText = Color(0xFFC82D55)
 
-private enum class ExportFormat(val label: String, val extension: String) {
-    TXT("TXT (.txt)", "txt"),
-    MARKDOWN("Markdown\n(.md)", "md")
+internal enum class ExportFormat(
+    val label: String,
+    val extension: String,
+    val mimeType: String
+) {
+    TXT("TXT (.txt)", "txt", "text/plain"),
+    MARKDOWN("Markdown\n(.md)", "md", "text/markdown")
 }
 
 private sealed interface SaveScreenState {
@@ -84,6 +88,41 @@ private sealed interface SaveScreenState {
     data class Success(val fileName: String) : SaveScreenState
     data class Error(val format: ExportFormat) : SaveScreenState
 }
+
+internal fun buildShareText(modeTitle: String, result: String): String {
+    val cleanTitle = modeTitle.trim()
+    val cleanResult = result.trim()
+    return when {
+        cleanTitle.isEmpty() -> cleanResult
+        cleanResult.isEmpty() -> cleanTitle
+        else -> "$cleanTitle\n\n$cleanResult"
+    }
+}
+
+internal fun formatExportContent(
+    modeTitle: String,
+    result: String,
+    format: ExportFormat
+): String {
+    val cleanTitle = modeTitle.trim()
+    val cleanResult = result.trim()
+    return when (format) {
+        ExportFormat.TXT -> when {
+            cleanTitle.isEmpty() -> cleanResult
+            cleanResult.isEmpty() -> cleanTitle
+            else -> "$cleanTitle\n\n$cleanResult"
+        }
+
+        ExportFormat.MARKDOWN -> when {
+            cleanTitle.isEmpty() -> cleanResult
+            cleanResult.isEmpty() -> "# $cleanTitle"
+            else -> "# $cleanTitle\n\n$cleanResult"
+        }
+    }
+}
+
+internal fun encodeExportUtf8(content: String): ByteArray =
+    content.toByteArray(Charsets.UTF_8)
 
 internal fun buildExportFileName(
     modeTitle: String,
@@ -106,7 +145,7 @@ private suspend fun writeUtf8TextToUri(
 ): Result<Unit> = withContext(Dispatchers.IO) {
     runCatching {
         context.contentResolver.openOutputStream(uri)?.use { stream ->
-            stream.write(text.toByteArray(Charsets.UTF_8))
+            stream.write(encodeExportUtf8(text))
             stream.flush()
         } ?: error("Не удалось открыть выбранный файл для записи")
     }
@@ -127,10 +166,11 @@ private fun resolveDisplayName(context: Context, uri: Uri, fallback: String): St
     }.getOrNull()?.takeIf { it.isNotBlank() } ?: fallback
 }
 
-private fun shareResultText(context: Context, text: String) {
+private fun shareResultText(context: Context, modeTitle: String, result: String) {
     val sendIntent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, text)
+        putExtra(Intent.EXTRA_SUBJECT, modeTitle)
+        putExtra(Intent.EXTRA_TEXT, buildShareText(modeTitle, result))
     }
     context.startActivity(Intent.createChooser(sendIntent, "Поделиться результатом"))
 }
@@ -155,7 +195,8 @@ fun ResultContent(
     val handleSaveUri: (Uri?) -> Unit = { uri ->
         if (uri != null) {
             scope.launch {
-                val writeResult = writeUtf8TextToUri(context, uri, result)
+                val content = formatExportContent(modeTitle, result, selectedFormat)
+                val writeResult = writeUtf8TextToUri(context, uri, content)
                 saveScreenState = if (writeResult.isSuccess) {
                     val savedName = resolveDisplayName(context, uri, pendingFileName)
                     SaveScreenState.Success(savedName)
@@ -167,11 +208,11 @@ fun ResultContent(
     }
 
     val txtLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/plain"),
+        contract = ActivityResultContracts.CreateDocument(ExportFormat.TXT.mimeType),
         onResult = handleSaveUri
     )
     val mdLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/markdown"),
+        contract = ActivityResultContracts.CreateDocument(ExportFormat.MARKDOWN.mimeType),
         onResult = handleSaveUri
     )
 
@@ -189,7 +230,7 @@ fun ResultContent(
         is SaveScreenState.Success -> {
             SaveSuccessScreen(
                 fileName = state.fileName,
-                onShare = { shareResultText(context, result) },
+                onShare = { shareResultText(context, modeTitle, result) },
                 onDone = { saveScreenState = SaveScreenState.Result },
                 modifier = modifier
             )
